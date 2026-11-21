@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLP 学习参数实验 · AI Agent 使用情况报告</title>
+<style>
+  :root {
+    --bg: #060c18;
+    --content-bg: #ffffff;
+    --text: #2c2c2c;
+    --text-secondary: #666;
+    --border: #e8e8e8;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --code-bg: #f5f5f5;
+
+    /* 星空背景：夜空 / 星云 / 银河 / 星点 */
+    --sky-a: #16294a;
+    --sky-b: #0d1b33;
+    --sky-c: #060c18;
+    --sky-top: rgba(56, 120, 255, 0.16);
+    --glow-a: rgba(58, 108, 235, 0.22);
+    --glow-b: rgba(120, 84, 220, 0.18);
+    --glow-c: rgba(0, 170, 235, 0.12);
+    --band-1: rgba(120, 160, 255, 0.04);
+    --band-2: rgba(184, 206, 255, 0.07);
+    --star-opacity: 0.85;
+    --star-glow: rgba(180, 210, 255, 0.75);
+    --surface: rgba(255, 255, 255, 0.94);
+    --surface-strong: rgba(255, 255, 255, 0.96);
+    --surface-soft: rgba(246, 249, 253, 0.86);
+    --accent-ring: rgba(37, 99, 235, 0.18);
+    --img-shadow: rgba(23, 43, 77, 0.10);
+    --card-shadow: rgba(0, 0, 0, 0.55);
+    --panel-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 40px 90px -40px rgba(0, 0, 0, 0.70);
+    --surface-glow: rgba(37, 99, 235, 0.05);
+  }
+  [data-theme="dark"] {
+    --bg: #01030a;
+    --content-bg: #242424;
+    --text: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --border: #3a3a3a;
+    --accent: #60a5fa;
+    --accent-light: #1e3a5f;
+    --code-bg: #2a2a2a;
+
+    --sky-a: #0a1020;
+    --sky-b: #05080f;
+    --sky-c: #01030a;
+    --sky-top: rgba(60, 110, 240, 0.14);
+    --glow-a: rgba(40, 90, 220, 0.20);
+    --glow-b: rgba(110, 70, 210, 0.16);
+    --glow-c: rgba(0, 160, 230, 0.10);
+    --band-1: rgba(110, 150, 255, 0.035);
+    --band-2: rgba(170, 195, 255, 0.06);
+    --star-opacity: 0.90;
+    --star-glow: rgba(190, 215, 255, 0.80);
+    --surface: rgba(36, 36, 36, 0.86);
+    --surface-strong: rgba(36, 36, 36, 0.90);
+    --surface-soft: rgba(42, 42, 42, 0.75);
+    --accent-ring: rgba(96, 165, 250, 0.22);
+    --img-shadow: rgba(0, 0, 0, 0.45);
+    --card-shadow: rgba(0, 0, 0, 0.5);
+    --panel-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 40px 90px -40px rgba(0, 0, 0, 0.90);
+    --surface-glow: rgba(96, 165, 250, 0.05);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 16px;
+  }
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    background: var(--content-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+    background: var(--content-bg);
+    min-height: 100vh;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 26px;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .back-link:hover { text-decoration: underline; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 34px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 38px 0 16px;
+    padding-bottom: 9px;
+    border-bottom: 2px solid var(--border);
+  }
+  p { margin-bottom: 14px; text-align: justify; }
+  ul { margin: 10px 0 16px 20px; }
+  li { margin-bottom: 6px; }
+  figure { margin: 22px 0; text-align: center; }
+  figure img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--content-bg);
+  }
+  figcaption { margin-top: 8px; font-size: 13px; color: var(--text-secondary); }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: "Consolas", "Monaco", monospace;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 12px 0 6px;
+  }
+  pre code { background: none; padding: 0; font-size: 13px; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { padding: 9px 12px; border: 1px solid var(--border); text-align: left; }
+  th { background: var(--code-bg); font-weight: 600; }
+  td.num { font-family: "Consolas", "Monaco", monospace; }
+  .ok { color: #2f855a; font-weight: 600; }
+  [data-theme="dark"] .ok { color: #68d391; }
+  .slider-box { margin: 18px 0 6px; }
+  .slider-box input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+  .slider-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 6px;
+  }
+  .slider-current { font-weight: 600; color: var(--accent); }
+  details {
+    margin: 12px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: var(--code-bg);
+  }
+  summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  /* ================= 科技感背景层 ================= */
+  .bg-fx {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(1200px 600px at 50% -12%, var(--sky-top), transparent 70%),
+      linear-gradient(180deg, var(--sky-a) 0%, var(--sky-b) 52%, var(--sky-c) 100%);
+  }
+  /* 星点：canvas 一次性绘制随机分布，不做逐帧计算 */
+  .starfield {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: var(--star-opacity);
+  }
+  /* 少量亮星的缓慢明灭 */
+  .star-twinkle {
+    position: absolute;
+    inset: 0;
+  }
+  .star-twinkle i {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px 1px var(--star-glow);
+    animation: twinkle 5s ease-in-out infinite;
+  }
+  .bg-glow {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform;
+  }
+  .bg-glow-a {
+    width: min(52vw, 660px);
+    height: min(52vw, 660px);
+    left: -22vw;
+    top: -22vh;
+    background: radial-gradient(circle, var(--glow-a) 0%, transparent 70%);
+    animation: glowDriftA 26s ease-in-out infinite alternate;
+  }
+  .bg-glow-b {
+    width: min(46vw, 600px);
+    height: min(46vw, 600px);
+    right: -16vw;
+    bottom: -22vh;
+    background: radial-gradient(circle, var(--glow-b) 0%, transparent 70%);
+    animation: glowDriftB 32s ease-in-out infinite alternate;
+  }
+  .bg-glow-c {
+    width: min(36vw, 460px);
+    height: min(36vw, 460px);
+    right: 4vw;
+    top: -16vh;
+    background: radial-gradient(circle, var(--glow-c) 0%, transparent 72%);
+    animation: glowDriftC 38s ease-in-out infinite alternate;
+  }
+  /* 淡淡的银河带 */
+  .nebula-band {
+    position: absolute;
+    inset: -20%;
+    background: linear-gradient(112deg,
+      transparent 26%, var(--band-1) 40%, var(--band-2) 50%, var(--band-1) 60%, transparent 74%);
+  }
+
+  /* 内容浮于背景之上 */
+  .page {
+    position: relative;
+    z-index: 1;
+    background:
+      radial-gradient(640px 210px at 10% -4%, var(--surface-glow), transparent 72%),
+      var(--surface);
+    box-shadow: var(--panel-shadow);
+  }
+  .theme-toggle {
+    background: var(--surface-strong);
+    -webkit-backdrop-filter: blur(10px) saturate(1.06);
+    backdrop-filter: blur(10px) saturate(1.06);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .theme-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px var(--card-shadow);
+  }
+  /* 标题与分隔线的主色短线 */
+  .subtitle { position: relative; }
+  .subtitle::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 130px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  h2 { position: relative; }
+  h2::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 72px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  figure img { box-shadow: 0 6px 24px var(--img-shadow); }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.85); }
+    50%      { opacity: 0.95; transform: scale(1.2); }
+  }
+  @keyframes glowDriftA {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to { transform: translate3d(6vw, 5vh, 0) scale(1.12); }
+  }
+  @keyframes glowDriftB {
+    from { transform: translate3d(0, 0, 0) scale(1.06); }
+    to { transform: translate3d(-7vw, 7vh, 0) scale(0.94); }
+  }
+  @keyframes glowDriftC {
+    from { transform: translate3d(0, 0, 0) scale(0.96); }
+    to { transform: translate3d(5vw, -6vh, 0) scale(1.1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-glow, .star-twinkle i { animation: none !important; }
+  }
+
+  @media (max-width: 768px) {
+    .page { padding: 32px 18px 60px; }
+    h1 { font-size: 22px; }
+    h2 { font-size: 18px; }
+    .theme-toggle { top: 10px; right: 10px; padding: 6px 10px; font-size: 13px; }
+    th, td { padding: 7px 8px; font-size: 13px; }
+    .slider-meta { font-size: 11px; }
+    /* 背景层：移动端收窄光晕、隐藏银河带、停掉动画 */
+    .bg-glow-a { width: 96vw; height: 96vw; left: -34vw; top: -6vh; }
+    .bg-glow-b { width: 80vw; height: 80vw; right: -30vw; bottom: -12vh; }
+    .bg-glow-c { display: none; }
+    .nebula-band { display: none; }
+    .bg-glow { animation: none; }
+    .star-twinkle i { animation: none; opacity: 0.7; }
+    .theme-toggle {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-fx" aria-hidden="true">
+  <div class="nebula-band"></div>
+  <div class="bg-glow bg-glow-a"></div>
+  <div class="bg-glow bg-glow-b"></div>
+  <div class="bg-glow bg-glow-c"></div>
+  <canvas class="starfield" id="starfield"></canvas>
+  <div class="star-twinkle"></div>
+</div>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙 深色模式</button>
+
+<main class="page">
+  <a class="back-link" href="./index.html">← 返回报告</a>
+  <h1>MLP 学习参数的实现与可视化</h1>
+  <p class="subtitle">人工智能概论 · 第二篇第 15 节「人工神经元网络」 · 苏州大学 数据科学与大数据技术</p>
+
+  <section>
+    <h2>1. 实验目标与网络结构</h2>
+    <p>XOR 是经典的非线性可分问题：一条直线无法把 <code>(0,0)</code>、<code>(1,1)</code> 与 <code>(0,1)</code>、<code>(1,0)</code> 分开。本实验用含 <strong>2 个隐藏单元</strong>的多层感知机学习 XOR，观察参数如何从误差中被逐步调整出来。</p>
+    <table>
+      <tr><th>项目</th><th>设置</th></tr>
+      <tr><td>网络结构</td><td>2 → 2 → 1（输入 2 维，隐藏 2 单元，输出 1 个 logit）</td></tr>
+      <tr><td>激活函数</td><td>Sigmoid</td></tr>
+      <tr><td>损失函数</td><td>BCE-with-logits（二元交叉熵）</td></tr>
+      <tr><td>优化器</td><td>Adam（手写，含偏差校正）</td></tr>
+      <tr><td>反向传播</td><td>手写解析梯度，链式法则</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>2. 学习参数</h2>
+    <table>
+      <tr><th>参数</th><th>取值</th><th>含义</th></tr>
+      <tr><td>学习率 lr</td><td class="num">0.1</td><td>每步参数更新的幅度</td></tr>
+      <tr><td>最大轮次 epochs</td><td class="num">5000</td><td>训练上限</td></tr>
+      <tr><td>初始种子 seed</td><td class="num">42</td><td>权重初始化的随机性</td></tr>
+      <tr><td>早停阈值 tol</td><td class="num">1e-3</td><td>loss 低于该值且全部分类正确时停止</td></tr>
+      <tr><td>Adam β₁ / β₂</td><td class="num">0.9 / 0.999</td><td>一阶、二阶动量衰减系数</td></tr>
+      <tr><td>最多重启次数</td><td class="num">8</td><td>卡在坏极小值时换初始化重试</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>3. 训练过程</h2>
+    <p>本次实际运行中，第 5 次初始化（seed = 46）收敛成功，共训练 <strong>1283</strong> 轮；在第 <strong>85</strong> 轮首次实现四个样本全部分类正确，最终损失降至 <strong>9.99e-4</strong>。</p>
+    <figure>
+      <img data-light="./images/mlp/loss-light.png" data-dark="./images/mlp/loss-dark.png" alt="训练损失曲线" src="./images/mlp/loss-light.png">
+      <figcaption>图 1 训练损失曲线（对数轴）；点线为 ln2 ≈ 随机猜测水平</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>4. 决策边界演化</h2>
+    <p>拖动滑块查看不同训练轮次下的决策边界。红色区域表示模型倾向于判为 1，蓝色表示倾向判为 0，黑色实线是 P = 0.5 的等概率边界。</p>
+    <div class="slider-box">
+      <input type="range" id="epochSlider" min="0" max="3" step="1" value="3" aria-label="训练轮次">
+      <div class="slider-meta">
+        <span>epoch 0</span><span>epoch 50</span><span>epoch 300</span><span>epoch 1283</span>
+      </div>
+      <div class="slider-meta">
+        <span>当前：<span class="slider-current" id="epochLabel">epoch 1283</span></span>
+        <span>loss = <span class="slider-current" id="lossLabel">0.000999</span></span>
+      </div>
+    </div>
+    <figure>
+      <img id="boundaryImg" alt="决策边界" src="./images/mlp/boundary-1283-light.png">
+      <figcaption id="boundaryCaption">图 2 决策边界（epoch 1283，loss=0.000999）</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>5. 隐藏空间</h2>
+    <p>两个隐藏单元把原本线性不可分的四点映射到新的二维空间。在这个空间里 <code>(0,1)</code> 与 <code>(1,0)</code> 几乎重合，四个点变得<strong>线性可分</strong>——这正是隐藏层的作用。</p>
+    <figure>
+      <img data-light="./images/mlp/hidden-light.png" data-dark="./images/mlp/hidden-dark.png" alt="隐藏空间" src="./images/mlp/hidden-light.png">
+      <figcaption>图 3 隐藏层输出空间与线性边界</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>6. 预测结果</h2>
+    <table>
+      <tr><th>样本</th><th>目标 y</th><th>预测概率 P(y=1)</th><th>判定（阈值 0.5）</th></tr>
+      <tr><td>(0,0)</td><td class="num">0</td><td class="num">0.0006</td><td class="ok">正确</td></tr>
+      <tr><td>(0,1)</td><td class="num">1</td><td class="num">0.9988</td><td class="ok">正确</td></tr>
+      <tr><td>(1,0)</td><td class="num">1</td><td class="num">0.9988</td><td class="ok">正确</td></tr>
+      <tr><td>(1,1)</td><td class="num">0</td><td class="num">0.0011</td><td class="ok">正确</td></tr>
+    </table>
+    <figure>
+      <img data-light="./images/mlp/proba-light.png" data-dark="./images/mlp/proba-dark.png" alt="预测概率" src="./images/mlp/proba-light.png">
+      <figcaption>图 4 四个样本的预测概率</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>7. 核心代码</h2>
+    <details>
+      <summary>前向传播与反向传播（点击展开）</summary>
+      <pre><code># 前向
+h = sigmoid(X @ W1 + b1)          # (4,2)
+z = h @ W2 + b2                   # logits (4,1)
+
+# 反向（BCE-with-logits 的解析梯度）
+dz  = (sigmoid(z) - Y) / len(X)   # dL/dz
+dhp = (dz @ W2.T) * h * (1 - h)   # 隐藏层梯度
+
+g_W2 = h.T @ dz
+g_b2 = dz.sum(0, keepdims=True)
+g_W1 = X.T @ dhp
+g_b1 = dhp.sum(0, keepdims=True)</code></pre>
+    </details>
+    <details>
+      <summary>Adam 参数更新（点击展开）</summary>
+      <pre><code>m[k] = beta1 * m[k] + (1 - beta1) * g[k]
+v[k] = beta2 * v[k] + (1 - beta2) * g[k] ** 2
+mhat = m[k] / (1 - beta1 ** t)
+vhat = v[k] / (1 - beta2 ** t)
+P[k] -= lr * mhat / (sqrt(vhat) + eps)</code></pre>
+    </details>
+  </section>
+
+  <section>
+    <h2>8. 结论</h2>
+    <ul>
+      <li>只有 2 个隐藏单元，网络就能学会 XOR，说明非线性激活带来的表达能力是关键。</li>
+      <li>"学习参数"的本质是最小化二元交叉熵：梯度从输出层逐层回传，Adam 依据一阶、二阶动量调整每个权重与偏置。</li>
+      <li>从损失曲线看，第 85 轮已全部分类正确，但 loss 仍在持续下降——分类正确与概率置信度是两件事。</li>
+      <li>训练存在随机性：本次第 5 次初始化才收敛，因此早停与多次重启对稳定性很重要。</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+  const SNAPS = [
+    { epoch: 0,    loss: '0.959105', light: './images/mlp/boundary-0000-light.png', dark: './images/mlp/boundary-0000-dark.png' },
+    { epoch: 50,   loss: '0.574845', light: './images/mlp/boundary-0050-light.png', dark: './images/mlp/boundary-0050-dark.png' },
+    { epoch: 300,  loss: '0.011618', light: './images/mlp/boundary-0300-light.png', dark: './images/mlp/boundary-0300-dark.png' },
+    { epoch: 1283, loss: '0.000999', light: './images/mlp/boundary-1283-light.png', dark: './images/mlp/boundary-1283-dark.png' }
+  ];
+
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') || 'light';
+  }
+
+  function renderSnapshot() {
+    const slider = document.getElementById('epochSlider');
+    if (!slider) return;
+    const s = SNAPS[Number(slider.value)];
+    const t = currentTheme();
+    document.getElementById('boundaryImg').src = t === 'dark' ? s.dark : s.light;
+    document.getElementById('epochLabel').textContent = 'epoch ' + s.epoch;
+    document.getElementById('lossLabel').textContent = s.loss;
+    document.getElementById('boundaryCaption').textContent =
+      '图 2 决策边界（epoch ' + s.epoch + '，loss=' + s.loss + '）';
+  }
+
+  function syncImages() {
+    const t = currentTheme();
+    document.querySelectorAll('img[data-light][data-dark]').forEach(function (img) {
+      img.src = t === 'dark' ? img.dataset.dark : img.dataset.light;
+    });
+    renderSnapshot();
+  }
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    document.querySelector('.theme-toggle').textContent =
+      next === 'dark' ? '☀️ 浅色模式' : '🌙 深色模式';
+    syncImages();
+  }
+
+  (function () {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    document.querySelector('.theme-toggle').textContent =
+      saved === 'dark' ? '☀️ 浅色模式' : '🌙 深色模式';
+    document.getElementById('epochSlider').addEventListener('input', renderSnapshot);
+    syncImages();
+  })();
+
+  // 星空背景：绘制随机星点 + 生成少量闪烁亮星
+  (function () {
+    var cv = document.getElementById('starfield');
+    if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext('2d');
+    var palette = ['255,255,255', '214,230,255', '255,244,230', '196,216,255'];
+
+    function draw() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var w = cv.clientWidth || window.innerWidth;
+      var h = cv.clientHeight || window.innerHeight;
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+
+      var count = Math.min(Math.round((w * h) / 2500), 1200);
+      for (var i = 0; i < count; i++) {
+        var x = Math.random() * w;
+        var y = Math.random() * h;
+        var t = Math.random();
+        var r = t < 0.78 ? 0.4 + Math.random() * 0.5
+              : t < 0.97 ? 0.9 + Math.random() * 0.6
+              : 1.5 + Math.random() * 0.9;
+        var a = 0.26 + Math.random() * 0.55;
+        var c = palette[(Math.random() * palette.length) | 0];
+        if (r > 1.4) {
+          var g = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
+          g.addColorStop(0, 'rgba(' + c + ',' + (a * 0.55).toFixed(3) + ')');
+          g.addColorStop(1, 'rgba(' + c + ',0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(x, y, r * 5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(' + c + ',' + a.toFixed(3) + ')';
+        ctx.fill();
+      }
+    }
+
+    var box = document.querySelector('.star-twinkle');
+    if (box) {
+      for (var k = 0; k < 18; k++) {
+        var s = document.createElement('i');
+        var size = Math.random() < 0.3 ? 2.5 : 2;
+        var dur = 3.5 + Math.random() * 4;
+        s.style.left = (Math.random() * 100).toFixed(2) + '%';
+        s.style.top = (Math.random() * 100).toFixed(2) + '%';
+        s.style.width = size + 'px';
+        s.style.height = size + 'px';
+        s.style.animationDuration = dur.toFixed(1) + 's';
+        s.style.animationDelay = (-Math.random() * dur).toFixed(1) + 's';
+        box.appendChild(s);
+      }
+    }
+
+    draw();
+    var rid;
+    window.addEventListener('resize', function () {
+      clearTimeout(rid);
+      rid = setTimeout(draw, 200);
+    });
+  })();
+</script>
+</body>
+</html>
